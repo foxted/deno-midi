@@ -236,7 +236,7 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
    * @param port the port number to open (from 0 to get_port_count() - 1)
    * @throws Error if the port number is invalid.
    */
-  openPort(port: number): void {
+  override openPort(port: number): void {
     super.openPort(port);
     this.createCallback();
   }
@@ -342,7 +342,7 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
    * Remove the callback created when opening the port.
    * @throws Error if the callback could not be removed.
    */
-  closePort(): void {
+  override closePort(): void {
     this.event_handlers.clear(); // Remove all the user callbacks.
     rtmidi.rtmidi_in_cancel_callback(this.device);
     this.callback?.unref();

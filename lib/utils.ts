@@ -1,4 +1,4 @@
-import config from "../deno.json" assert { type: "json" };
+import config from "../deno.json" with { type: "json" };
 
 /**
  * @returns The path to the RtMidi library according to the OS.
