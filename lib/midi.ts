@@ -70,7 +70,7 @@ abstract class Device {
     }
 
     const ok_data = new Uint8Array(
-      new Deno.UnsafePointerView(ok_ptr).getArrayBuffer(1),
+      new Deno.UnsafePointerView(ok_ptr).getArrayBuffer(1)
     );
     if (ok_data[0] == 1) {
       return;
@@ -120,7 +120,7 @@ abstract class Device {
         this.device,
         i,
         port_name,
-        port_name_length,
+        port_name_length
       );
       this.checkError();
       ports.push(decoder.decode(port_name).substring(0, success));
@@ -140,7 +140,7 @@ abstract class Device {
     rtmidi.rtmidi_open_port(
       this.device,
       port,
-      encoder.encode(this.port_name + "\0"),
+      encoder.encode(this.port_name + "\0")
     );
     this.checkError();
     this.open_port = true;
@@ -160,7 +160,7 @@ abstract class Device {
     // On windows, ports are named "port_name port_number" so we need to parse the port name.
     if (Deno.build.os == "windows") {
       for (let i = 0; i < ports.length; i++) {
-        if (ports[i] == (port + " " + i)) {
+        if (ports[i] == port + " " + i) {
           this.openPort(i);
           return;
         }
@@ -186,7 +186,7 @@ abstract class Device {
 
     rtmidi.rtmidi_open_virtual_port(
       this.device,
-      encoder.encode("Virtual " + this.port_name + "\0"),
+      encoder.encode("Virtual " + this.port_name + "\0")
     );
     this.checkError();
   }
@@ -209,15 +209,16 @@ abstract class Device {
  */
 export class Input<T extends MessageEventContract<T> = MessageEvents>
   extends Device
-  implements EventBus<T> {
-  private callback:
-    | Deno.UnsafeCallback<typeof RtMidiCCallbackCallbackDefinition>
-    | null = null;
+  implements EventBus<T>
+{
+  private callback: Deno.UnsafeCallback<
+    typeof RtMidiCCallbackCallbackDefinition
+  > | null = null;
   private event_handlers: Map<string, MessageEventHandler> = new Map();
 
-  constructor() {
+  constructor(port_name: string) {
     const midi_in = rtmidi.rtmidi_in_create_default();
-    super("Deno Midi In Port", midi_in);
+    super(port_name, midi_in);
   }
 
   /**
@@ -252,12 +253,12 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
         deltaTime: number,
         message: Deno.PointerValue<unknown>,
         messageSize: number | bigint,
-        _userData: Deno.PointerValue<unknown>,
+        _userData: Deno.PointerValue<unknown>
       ) => {
         const msg_data = new Uint8Array(
           new Deno.UnsafePointerView(message!).getArrayBuffer(
-            messageSize as number,
-          ),
+            messageSize as number
+          )
         );
         const msg = decodeMessage(msg_data);
 
@@ -274,7 +275,7 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
             deltaTime,
           });
         }
-      },
+      }
     );
     rtmidi.rtmidi_in_set_callback(this.device, this.callback!.pointer, null);
     this.checkError();
@@ -292,7 +293,7 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
    */
   on<EventName extends keyof T>(
     event: EventName,
-    handler: MessageEventHandler<T[EventName]>,
+    handler: MessageEventHandler<T[EventName]>
   ): void {
     if (this.event_handlers.has(event as string)) {
       throw new Error("Callback already registered");
@@ -316,7 +317,7 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
    */
   emit<EventName extends keyof T>(
     event: EventName,
-    data: { message: T[EventName]; deltaTime?: number },
+    data: { message: T[EventName]; deltaTime?: number }
   ): void {
     const handler = this.event_handlers.get(event as string);
     if (handler) {
@@ -333,7 +334,7 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
       this.device,
       options.sysex || false,
       options.timing || false,
-      options.activeSensing || false,
+      options.activeSensing || false
     );
     this.checkError();
   }
@@ -359,9 +360,9 @@ export class Input<T extends MessageEventContract<T> = MessageEvents>
  * @see Device
  */
 export class Output extends Device {
-  constructor() {
+  constructor(port_name: string) {
     const midi_out = rtmidi.rtmidi_out_create_default();
-    super("Deno Midi Out Port", midi_out);
+    super(port_name, midi_out);
   }
 
   /**
@@ -389,7 +390,7 @@ export class Output extends Device {
    * ```
    */
   sendMessage<T extends MessageData, M extends Message<T>>(
-    m: M | number[],
+    m: M | number[]
   ): void {
     if (m instanceof Message) {
       this.sendRawMessage(m.getMessage());
@@ -405,7 +406,7 @@ export class Output extends Device {
     rtmidi.rtmidi_out_send_message(
       this.device,
       new Uint8Array(message),
-      message.length,
+      message.length
     );
     this.checkError(ErrorHandling.Log);
   }
